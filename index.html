@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <title>Sistema de Chamado - Versão Simples</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+
+  <body>
+    <h1>Sistema de Chamado - Versão Simples</h1>
+
+    <form id="formChamado">
+      <input type="text" id="nome" placeholder="Nome" required>
+      <input type="text" id="setor" placeholder="Setor" required>
+      <textarea id="descricao" placeholder="Descrição do problema" required></textarea>
+      <select id="prioridade" required>
+        <option value="">Prioridade</option>
+        <option value="Baixa">Baixa</option>
+        <option value="Media">Média</option>
+        <option value="Alta">Alta</option>
+      </select>
+      <button type="submit">Enviar Chamado</button>
+    </form>
+
+    <h2>Chamados</h2>
+    <div id="listaChamados"></div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
