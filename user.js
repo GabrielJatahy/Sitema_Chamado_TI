@@ -17,6 +17,15 @@ onAuthStateChanged(auth, (user) => {
     return;
   }
 
+  onAuthStateChanged(auth, (user) => {
+  if (user) {
+    console.log("Usuário autenticado:", user.uid);
+  } else {
+    console.log("Nenhum usuário autenticado");
+  }
+});
+
+
   const uid = user.uid;
   const chamadosCollection = collection(window.db, "chamados");
 
