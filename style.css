@@ -189,7 +189,7 @@ p {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin: 50px 0 30px 0; /* aumentei o margin-top para 50px */
+  margin-top: 50px 0 30px 0; /* aumentei o margin-top para 50px */
   justify-content: center;
 }
 
