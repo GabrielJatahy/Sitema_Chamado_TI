@@ -14,9 +14,12 @@ import {
 
 const listaChamados = document.getElementById("listaChamados");
 const auth = getAuth();
-const adminUID = "9PAzqlz8UacIi2Wsx7KZ1coV0An1"; // 🔐 UID do admin
 
-// Faz login anônimo para autenticar no Firebase
+// 🔥 Força o modo admin (para testar localmente)
+const isAdmin = true;
+const adminUID = "9PAzqlz8UacIi2Wsx7KZ1coV0An1";
+
+// Faz login anônimo
 signInAnonymously(auth).catch((err) => {
   console.error("Erro ao autenticar anonimamente:", err);
 });
@@ -28,20 +31,19 @@ onAuthStateChanged(auth, (user) => {
     return;
   }
 
-  console.log("UID autenticado:", user.uid);
+  console.log("Usuário autenticado:", user.uid);
 
-  // ⚙️ Para ambiente de teste, permite forçar modo admin
-  const isAdmin = true; // 🔥 Mude para false caso queira testar as permissões reais
+  // Se for admin (modo forçado ou UID verdadeiro)
+  if (isAdmin || user.uid === adminUID) {
+    console.log("✅ Acesso concedido ao painel admin. Carregando chamados...");
 
-  if (user.uid === adminUID || isAdmin) {
-    console.log("✅ Painel admin carregando todos os chamados...");
-
+    // Atualização em tempo real
     onSnapshot(collection(window.db, "chamados"), (snapshot) => {
       renderizarChamados(snapshot);
     });
 
   } else {
-    console.log("⚠️ Acesso negado. Usuário não é admin.");
+    console.log("⚠️ Usuário não é admin. Acesso negado ao painel.");
     listaChamados.innerHTML = "<p style='color:red;'>Acesso restrito ao administrador.</p>";
   }
 });
@@ -84,7 +86,7 @@ function renderizarChamados(snapshot) {
   });
 }
 
-// Funções globais para salvar e deletar chamados
+// Funções globais
 window.salvarAlteracoes = async function (id) {
   const status = document.getElementById(`status-${id}`).value;
   const responsavel = document.getElementById(`resp-${id}`).value;
