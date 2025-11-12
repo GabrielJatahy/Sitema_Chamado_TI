@@ -28,23 +28,25 @@ onAuthStateChanged(auth, (user) => {
     return;
   }
 
-  console.log("Usuário autenticado:", user.uid);
+  console.log("UID autenticado:", user.uid);
 
-  if (user.uid === adminUID) {
-    console.log("✅ Usuário admin autenticado. Carregando chamados...");
+  // ⚙️ Para ambiente de teste, permite forçar modo admin
+  const isAdmin = true; // 🔥 Mude para false caso queira testar as permissões reais
 
-    // Atualização em tempo real (todos os chamados)
+  if (user.uid === adminUID || isAdmin) {
+    console.log("✅ Painel admin carregando todos os chamados...");
+
     onSnapshot(collection(window.db, "chamados"), (snapshot) => {
       renderizarChamados(snapshot);
     });
 
   } else {
-    console.log("⚠️ Usuário não é admin. Acesso negado ao painel.");
+    console.log("⚠️ Acesso negado. Usuário não é admin.");
     listaChamados.innerHTML = "<p style='color:red;'>Acesso restrito ao administrador.</p>";
   }
 });
 
-// Função para renderizar os chamados na tela
+// Função para renderizar os chamados
 function renderizarChamados(snapshot) {
   listaChamados.innerHTML = "";
 
