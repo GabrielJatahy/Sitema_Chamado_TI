@@ -6,9 +6,45 @@ import {
   doc
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-const listaChamados = document.getElementById("listaChamados");
+import {
+  getAuth,
+  signInAnonymously,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-// Função que renderiza os chamados em tela
+const listaChamados = document.getElementById("listaChamados");
+const auth = getAuth();
+const adminUID = "9PAzqlz8UacIi2Wsx7KZ1coV0An1"; // 🔐 UID do admin
+
+// Faz login anônimo para autenticar no Firebase
+signInAnonymously(auth).catch((err) => {
+  console.error("Erro ao autenticar anonimamente:", err);
+});
+
+// Escuta mudanças no estado de autenticação
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    console.log("Nenhum usuário autenticado. Tentando novamente...");
+    return;
+  }
+
+  console.log("Usuário autenticado:", user.uid);
+
+  if (user.uid === adminUID) {
+    console.log("✅ Usuário admin autenticado. Carregando chamados...");
+
+    // Atualização em tempo real (todos os chamados)
+    onSnapshot(collection(window.db, "chamados"), (snapshot) => {
+      renderizarChamados(snapshot);
+    });
+
+  } else {
+    console.log("⚠️ Usuário não é admin. Acesso negado ao painel.");
+    listaChamados.innerHTML = "<p style='color:red;'>Acesso restrito ao administrador.</p>";
+  }
+});
+
+// Função para renderizar os chamados na tela
 function renderizarChamados(snapshot) {
   listaChamados.innerHTML = "";
 
@@ -45,11 +81,6 @@ function renderizarChamados(snapshot) {
     listaChamados.appendChild(div);
   });
 }
-
-// Atualização em tempo real para admin (todos os chamados)
-onSnapshot(collection(window.db, "chamados"), (snapshot) => {
-  renderizarChamados(snapshot);
-});
 
 // Funções globais para salvar e deletar chamados
 window.salvarAlteracoes = async function (id) {
