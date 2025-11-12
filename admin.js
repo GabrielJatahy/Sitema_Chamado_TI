@@ -26,12 +26,30 @@ onAuthStateChanged(auth, user => {
   }
 });
 
+// Filtros visuais rápidos
+const filtrosContainer = document.createElement("div");
+filtrosContainer.style.marginBottom = "20px";
+["Todos", "Aberto", "Em andamento", "Em espera", "Concluído"].forEach(status => {
+  const btn = document.createElement("button");
+  btn.textContent = status;
+  btn.onclick = () => filtrarChamados(status);
+  filtrosContainer.appendChild(btn);
+});
+listaChamados.parentNode.insertBefore(filtrosContainer, listaChamados);
+
+// Variável global para armazenar últimos dados
+let chamadosSnapshotGlobal = [];
+
 // Renderiza chamados
 function renderizarChamados(snapshot) {
   listaChamados.innerHTML = "";
+  chamadosSnapshotGlobal = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
-  // Cria array com docs + id
-  const chamadosArray = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  mostrarChamados(chamadosSnapshotGlobal);
+}
+
+function mostrarChamados(chamadosArray) {
+  listaChamados.innerHTML = "";
 
   // Ordena do mais recente para o mais antigo
   chamadosArray.sort((a, b) => {
@@ -55,17 +73,17 @@ function renderizarChamados(snapshot) {
 
     const div = document.createElement("div");
     div.classList.add("card");
-
-    // Destaque para chamados abertos
     if (chamado.status === "Aberto") div.classList.add("aberto");
 
     // Badge de status
     const badge = document.createElement("span");
     badge.classList.add("status-badge");
-    if (chamado.status === "Aberto") badge.classList.add("status-aberto");
-    else if (chamado.status === "Em andamento") badge.classList.add("status-em-andamento");
-    else if (chamado.status === "Em espera") badge.classList.add("status-em-espera");
-    else if (chamado.status === "Concluído") badge.classList.add("status-concluido");
+    badge.classList.add(
+      chamado.status === "Aberto" ? "status-aberto" :
+      chamado.status === "Em andamento" ? "status-em-andamento" :
+      chamado.status === "Em espera" ? "status-em-espera" :
+      "status-concluido"
+    );
     badge.textContent = chamado.status;
     div.appendChild(badge);
 
@@ -95,6 +113,12 @@ function renderizarChamados(snapshot) {
 
     listaChamados.appendChild(div);
   });
+}
+
+// Filtrar chamados por status
+function filtrarChamados(status) {
+  if (status === "Todos") mostrarChamados(chamadosSnapshotGlobal);
+  else mostrarChamados(chamadosSnapshotGlobal.filter(c => c.status === status));
 }
 
 // Funções globais
@@ -136,13 +160,11 @@ document.getElementById("btnRelatorio").addEventListener("click", async () => {
   chamados.forEach(c => {
     if (!abertosPorUsuario[c.nome]) abertosPorUsuario[c.nome] = 0;
     abertosPorUsuario[c.nome]++;
-
     const resp = c.responsavel || "Não atribuído";
     if (!atendidosPorResponsavel[resp]) atendidosPorResponsavel[resp] = 0;
     atendidosPorResponsavel[resp]++;
   });
 
-  // Cabeçalho
   doc.setFontSize(20);
   doc.setTextColor(41, 128, 185);
   doc.text("Relatório de Chamados", 14, 20);
