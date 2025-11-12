@@ -1,46 +1,37 @@
-import { collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { collection, addDoc, onSnapshot, getDocs, Timestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-// Inicializa EmailJS (substitua pela sua Public Key)
 emailjs.init("01yuXGwmVTOcPB5fb");
 
 const form = document.getElementById("formChamado");
 const listaChamados = document.getElementById("listaChamados");
 const auth = getAuth();
 
-// Login anônimo
-signInAnonymously(auth).catch(err => console.error("Erro ao autenticar anonimamente:", err));
+signInAnonymously(auth).catch(err => console.error(err));
 
-// Escuta mudanças de autenticação
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    console.log("Nenhum usuário autenticado.");
-    return;
-  }
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return;
 
   const uid = user.uid;
   const chamadosCollection = collection(window.db, "chamados");
 
-  console.log("Usuário autenticado:", uid);
-
-  // Atualização em tempo real: mostra apenas chamados do usuário atual
-  onSnapshot(chamadosCollection, (snapshot) => {
+  // Atualização em tempo real
+  onSnapshot(chamadosCollection, snapshot => {
     listaChamados.innerHTML = "";
-    snapshot.forEach((doc) => {
-      const chamado = doc.data();
-      if (chamado.uid === uid) {
+    snapshot.forEach(doc => {
+      const c = doc.data();
+      if (c.uid === uid) {
         const div = document.createElement("div");
         div.classList.add("card");
-        // Formata a data para exibição legível
-        const dataFormatada = chamado.dataAbertura.toDate 
-          ? chamado.dataAbertura.toDate().toLocaleString() 
-          : new Date(chamado.dataAbertura).toLocaleString();
+
+        // converte Timestamp para Date se necessário
+        const dataFormatada = c.dataAbertura.toDate ? c.dataAbertura.toDate().toLocaleString() : new Date(c.dataAbertura).toLocaleString();
 
         div.innerHTML = `
-          <strong>${chamado.nome}</strong> (${chamado.setor})<br>
-          <b>Descrição:</b> ${chamado.descricao}<br>
-          <b>Status:</b> ${chamado.status}<br>
-          <b>Responsável:</b> ${chamado.responsavel}<br>
+          <strong>${c.nome}</strong> (${c.setor})<br>
+          <b>Descrição:</b> ${c.descricao}<br>
+          <b>Status:</b> ${c.status}<br>
+          <b>Responsável:</b> ${c.responsavel}<br>
           <b>Data de abertura:</b> ${dataFormatada}
         `;
         listaChamados.appendChild(div);
@@ -48,8 +39,8 @@ onAuthStateChanged(auth, (user) => {
     });
   });
 
-  // Enviar novo chamado
-  form.addEventListener("submit", async (e) => {
+  // Envio de chamado
+  form.addEventListener("submit", async e => {
     e.preventDefault();
 
     const chamado = {
@@ -61,29 +52,44 @@ onAuthStateChanged(auth, (user) => {
       telefone: document.getElementById("telefone").value,
       status: "Aberto",
       responsavel: "Não atribuído",
-      dataAbertura: new Date() // salva como Timestamp/Date real
+      dataAbertura: Timestamp.now() // salva corretamente como Timestamp
     };
 
     try {
-      // Salva no Firestore
       await addDoc(chamadosCollection, chamado);
       form.reset();
 
-      // Envia notificação por e-mail via EmailJS
       emailjs.send("service_7jso602", "template_79t3rx9", {
         nome: chamado.nome,
         setor: chamado.setor,
         descricao: chamado.descricao,
-        responsavel: chamado.responsavel || "Não atribuído",
-        // Formata data para e-mail
-        dataAbertura: chamado.dataAbertura.toLocaleString()
+        responsavel: chamado.responsavel,
+        dataAbertura: new Date().toLocaleString()
       })
-      .then(() => console.log("E-mail de notificação enviado com sucesso!"))
+      .then(() => console.log("E-mail enviado!"))
       .catch(err => console.error("Erro ao enviar e-mail:", err));
-
     } catch (err) {
-      console.error("Erro ao criar chamado:", err);
-      alert("Não foi possível enviar o chamado. Verifique as permissões e tente novamente.");
+      console.error(err);
+      alert("Não foi possível criar o chamado.");
     }
   });
 });
+
+// Função para gerar relatório PDF com datas corretas
+async function gerarRelatorio() {
+  const snapshot = await getDocs(collection(window.db, "chamados"));
+  const chamados = snapshot.docs.map(d => d.data());
+  const agora = new Date();
+  const mesAtual = agora.getMonth();
+  const anoAtual = agora.getFullYear();
+
+  const chamadosMes = chamados.filter(c => {
+    if (!c.dataAbertura) return false;
+    const data = c.dataAbertura.toDate ? c.dataAbertura.toDate() : new Date(c.dataAbertura);
+    return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
+  }).length;
+
+  console.log("Chamados deste mês:", chamadosMes);
+}
+
+window.gerarRelatorio = gerarRelatorio;
