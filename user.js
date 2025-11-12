@@ -3,7 +3,7 @@ import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gsta
 
 // Inicializa EmailJS
 // Substitua pela sua Public Key do EmailJS
-emailjs.init("SUA_PUBLIC_KEY");
+emailjs.init("01yuXGwmVTOcPB5fb");
 
 const form = document.getElementById("formChamado");
 const listaChamados = document.getElementById("listaChamados");
