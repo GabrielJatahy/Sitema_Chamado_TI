@@ -1,8 +1,7 @@
 import { collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-// Inicializa EmailJS
-// Substitua pela sua Public Key do EmailJS
+// Inicializa EmailJS (substitua pela sua Public Key)
 emailjs.init("01yuXGwmVTOcPB5fb");
 
 const form = document.getElementById("formChamado");
@@ -10,14 +9,12 @@ const listaChamados = document.getElementById("listaChamados");
 const auth = getAuth();
 
 // Login anônimo
-signInAnonymously(auth).catch((err) => {
-  console.error("Erro ao autenticar anonimamente:", err);
-});
+signInAnonymously(auth).catch(err => console.error("Erro ao autenticar anonimamente:", err));
 
 // Escuta mudanças de autenticação
 onAuthStateChanged(auth, (user) => {
   if (!user) {
-    console.log("Nenhum usuário autenticado (tente novamente).");
+    console.log("Nenhum usuário autenticado.");
     return;
   }
 
@@ -67,19 +64,15 @@ onAuthStateChanged(auth, (user) => {
       await addDoc(chamadosCollection, chamado);
       form.reset();
 
-      // 🔔 Envia notificação por e-mail via EmailJS
+      // Envia notificação por e-mail via EmailJS
       emailjs.send("service_7jso602", "template_79t3rx9", {
         nome: chamado.nome,
         email: chamado.email,
         descricao: chamado.descricao,
         setor: chamado.setor
       })
-      .then(() => {
-        console.log("E-mail de notificação enviado com sucesso!");
-      })
-      .catch((err) => {
-        console.error("Erro ao enviar e-mail:", err);
-      });
+      .then(() => console.log("E-mail de notificação enviado com sucesso!"))
+      .catch(err => console.error("Erro ao enviar e-mail:", err));
 
     } catch (err) {
       console.error("Erro ao criar chamado:", err);
