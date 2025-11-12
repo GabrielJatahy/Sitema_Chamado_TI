@@ -9,6 +9,25 @@
   <h1>Painel de Administração</h1>
   <div id="listaChamados"></div>
 
-  <script src="admin.js"></script>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBKix8Rt1q1pZyljXsCo4O61xb3x5vSWPA",
+      authDomain: "sistemachamadotiportosrs.firebaseapp.com",
+      projectId: "sistemachamadotiportosrs",
+      storageBucket: "sistemachamadotiportosrs.firebasestorage.app",
+      messagingSenderId: "87138495707",
+      appId: "1:87138495707:web:58c856ca1f00d7c48c30fe"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    window.db = db;
+  </script>
+
+  <script type="module" src="admin.js"></script>
 </body>
 </html>

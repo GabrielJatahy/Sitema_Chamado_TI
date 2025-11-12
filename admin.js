@@ -1,27 +1,21 @@
+import {
+  collection,
+  onSnapshot,
+  updateDoc,
+  deleteDoc,
+  doc
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
 const listaChamados = document.getElementById("listaChamados");
 
-function mostrarChamados() {
-  const chamados = JSON.parse(localStorage.getItem("chamados")) || [];
+// Função que renderiza os chamados em tela
+function renderizarChamados(snapshot) {
   listaChamados.innerHTML = "";
 
-  if (chamados.length === 0) {
-    listaChamados.innerHTML = "<p>Nenhum chamado registrado ainda.</p>";
-    return;
-  }
-
-  chamados.forEach(chamado => {
+  snapshot.forEach((d) => {
+    const chamado = d.data();
     const div = document.createElement("div");
     div.classList.add("card");
-
-    // evita erro de data inválida
-    const dataConclusaoValue =
-      chamado.dataConclusao && chamado.dataConclusao !== "—"
-        ? (() => {
-            const data = new Date(chamado.dataConclusao);
-            if (isNaN(data)) return "";
-            return data.toISOString().slice(0, 16);
-          })()
-        : "";
 
     div.innerHTML = `
       <strong>${chamado.nome}</strong> (${chamado.setor})<br>
@@ -30,11 +24,11 @@ function mostrarChamados() {
       <b>Telefone:</b> ${chamado.telefone}<br>
       <b>Status atual:</b> ${chamado.status}<br>
       <b>Responsável:</b> ${chamado.responsavel}<br>
-      <b>Abertura:</b> ${chamado.dataAbertura}<br>
-      <b>Conclusão:</b> ${chamado.dataConclusao || "—"}<br><br>
+      <b>Data abertura:</b> ${chamado.dataAbertura || "-"}<br>
+      <b>Data encerramento:</b> ${chamado.dataFechamento || "-"}<br><br>
 
       <label>Alterar status:</label>
-      <select id="status-${chamado.id}">
+      <select id="status-${d.id}">
         <option value="Aberto" ${chamado.status === "Aberto" ? "selected" : ""}>Aberto</option>
         <option value="Em andamento" ${chamado.status === "Em andamento" ? "selected" : ""}>Em andamento</option>
         <option value="Em espera" ${chamado.status === "Em espera" ? "selected" : ""}>Em espera</option>
@@ -42,47 +36,34 @@ function mostrarChamados() {
       </select><br><br>
 
       <label>Responsável:</label>
-      <input type="text" id="resp-${chamado.id}" value="${chamado.responsavel}"><br><br>
+      <input type="text" id="resp-${d.id}" value="${chamado.responsavel}"><br><br>
 
-      <label>Data de conclusão:</label>
-      <input type="datetime-local" id="dataFim-${chamado.id}" value="${dataConclusaoValue}">
-      <br><br>
-
-      <button onclick="salvarAlteracoes(${chamado.id})">Salvar alterações</button>
-      <button onclick="deletarChamado(${chamado.id})">Excluir</button>
+      <button onclick="salvarAlteracoes('${d.id}')">Salvar alterações</button>
+      <button onclick="deletarChamado('${d.id}')">Excluir</button>
     `;
 
     listaChamados.appendChild(div);
   });
 }
 
-function salvarAlteracoes(id) {
-  let chamados = JSON.parse(localStorage.getItem("chamados")) || [];
-  const index = chamados.findIndex(c => c.id === id);
+// Atualização em tempo real
+onSnapshot(collection(window.db, "chamados"), (snapshot) => {
+  renderizarChamados(snapshot);
+});
 
-  if (index !== -1) {
-    chamados[index].status = document.getElementById(`status-${id}`).value;
-    chamados[index].responsavel = document.getElementById(`resp-${id}`).value;
+window.salvarAlteracoes = async function (id) {
+  const status = document.getElementById(`status-${id}`).value;
+  const responsavel = document.getElementById(`resp-${id}`).value;
+  const chamadoRef = doc(window.db, "chamados", id);
 
-    const dataFimInput = document.getElementById(`dataFim-${id}`).value;
-    if (dataFimInput) {
-      const dataFormatada = new Date(dataFimInput).toLocaleString("pt-BR", {
-        dateStyle: "short",
-        timeStyle: "short"
-      });
-      chamados[index].dataConclusao = dataFormatada;
-    }
-
-    localStorage.setItem("chamados", JSON.stringify(chamados));
-    mostrarChamados();
+  const updateData = { status, responsavel };
+  if (status === "Concluído") {
+    updateData.dataFechamento = new Date().toLocaleString();
   }
-}
 
-function deletarChamado(id) {
-  let chamados = JSON.parse(localStorage.getItem("chamados")) || [];
-  chamados = chamados.filter(c => c.id !== id);
-  localStorage.setItem("chamados", JSON.stringify(chamados));
-  mostrarChamados();
-}
+  await updateDoc(chamadoRef, updateData);
+};
 
-mostrarChamados();
+window.deletarChamado = async function (id) {
+  await deleteDoc(doc(window.db, "chamados", id));
+};
