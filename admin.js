@@ -3,7 +3,8 @@ import {
   onSnapshot,
   updateDoc,
   deleteDoc,
-  doc
+  doc,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 import {
@@ -101,89 +102,88 @@ window.deletarChamado = async function (id) {
 };
 
 // Botão gerar relatório PDF com estatísticas e tabela organizada
-document.getElementById("btnRelatorio").addEventListener("click", () => {
-  onSnapshot(collection(window.db, "chamados"), (snapshot) => {
-    const doc = new window.jspdf.jsPDF();
+document.getElementById("btnRelatorio").addEventListener("click", async () => {
+  const snapshot = await getDocs(collection(window.db, "chamados")); // pega os dados uma vez
+  const doc = new window.jspdf.jsPDF();
 
-    const chamados = snapshot.docs.map(d => d.data());
-    const totalChamados = chamados.length;
-    const agora = new Date();
-    const mesAtual = agora.getMonth();
-    const anoAtual = agora.getFullYear();
+  const chamados = snapshot.docs.map(d => d.data());
+  const totalChamados = chamados.length;
+  const agora = new Date();
+  const mesAtual = agora.getMonth();
+  const anoAtual = agora.getFullYear();
 
-    // Chamados do mês atual
-    const chamadosMes = chamados.filter(c => {
-      const data = new Date(c.dataAbertura);
-      return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
-    }).length;
+  // Chamados do mês atual
+  const chamadosMes = chamados.filter(c => {
+    const data = new Date(c.dataAbertura);
+    return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
+  }).length;
 
-    // Chamados abertos por usuário
-    const abertosPorUsuario = {};
-    // Chamados atendidos por responsável
-    const atendidosPorResponsavel = {};
-    chamados.forEach(c => {
-      if (!abertosPorUsuario[c.nome]) abertosPorUsuario[c.nome] = 0;
-      abertosPorUsuario[c.nome]++;
-      const resp = c.responsavel || "Não atribuído";
-      if (!atendidosPorResponsavel[resp]) atendidosPorResponsavel[resp] = 0;
-      atendidosPorResponsavel[resp]++;
-    });
-
-    // Cabeçalho e estatísticas
-    doc.setFontSize(20);
-    doc.setTextColor(41, 128, 185);
-    doc.text("Relatório de Chamados", 14, 20);
-    doc.setLineWidth(0.5);
-    doc.line(14, 24, 196, 24);
-
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    let y = 30;
-    doc.text(`Total de chamados: ${totalChamados}`, 14, y); y += 8;
-    doc.text(`Chamados abertos neste mês: ${chamadosMes}`, 14, y); y += 8;
-
-    doc.text("Chamados abertos por usuário:", 14, y); y += 8;
-    for (const nome in abertosPorUsuario) {
-      doc.text(`- ${nome}: ${abertosPorUsuario[nome]}`, 16, y);
-      y += 6;
-    }
-
-    y += 4;
-    doc.text("Chamados atendidos por responsável:", 14, y); y += 8;
-    for (const resp in atendidosPorResponsavel) {
-      doc.text(`- ${resp}: ${atendidosPorResponsavel[resp]}`, 16, y);
-      y += 6;
-    }
-
-    y += 10;
-
-    // Tabela detalhada com jsPDF-AutoTable
-    const tableData = snapshot.docs.map((d, index) => {
-      const c = d.data();
-      return [
-        index + 1,
-        c.nome,
-        c.setor,
-        c.status,
-        c.responsavel || "-",
-        c.dataAbertura || "-",
-        c.dataFechamento || "-",
-        c.email,
-        c.telefone
-      ];
-    });
-
-    doc.autoTable({
-      startY: y,
-      head: [["#", "Usuário", "Setor", "Status", "Responsável", "Abertura", "Encerramento", "Email", "Telefone"]],
-      body: tableData,
-      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: "bold" },
-      alternateRowStyles: { fillColor: [245, 245, 245] },
-      margin: { left: 14, right: 14 },
-      styles: { fontSize: 10 },
-      theme: 'grid'
-    });
-
-    doc.save("relatorio_chamados.pdf");
+  // Chamados abertos por usuário
+  const abertosPorUsuario = {};
+  // Chamados atendidos por responsável
+  const atendidosPorResponsavel = {};
+  chamados.forEach(c => {
+    if (!abertosPorUsuario[c.nome]) abertosPorUsuario[c.nome] = 0;
+    abertosPorUsuario[c.nome]++;
+    const resp = c.responsavel || "Não atribuído";
+    if (!atendidosPorResponsavel[resp]) atendidosPorResponsavel[resp] = 0;
+    atendidosPorResponsavel[resp]++;
   });
+
+  // Cabeçalho e estatísticas
+  doc.setFontSize(20);
+  doc.setTextColor(41, 128, 185);
+  doc.text("Relatório de Chamados", 14, 20);
+  doc.setLineWidth(0.5);
+  doc.line(14, 24, 196, 24);
+
+  doc.setFontSize(12);
+  doc.setTextColor(0, 0, 0);
+  let y = 30;
+  doc.text(`Total de chamados: ${totalChamados}`, 14, y); y += 8;
+  doc.text(`Chamados abertos neste mês: ${chamadosMes}`, 14, y); y += 8;
+
+  doc.text("Chamados abertos por usuário:", 14, y); y += 8;
+  for (const nome in abertosPorUsuario) {
+    doc.text(`- ${nome}: ${abertosPorUsuario[nome]}`, 16, y);
+    y += 6;
+  }
+
+  y += 4;
+  doc.text("Chamados atendidos por responsável:", 14, y); y += 8;
+  for (const resp in atendidosPorResponsavel) {
+    doc.text(`- ${resp}: ${atendidosPorResponsavel[resp]}`, 16, y);
+    y += 6;
+  }
+
+  y += 10;
+
+  // Tabela detalhada com jsPDF-AutoTable
+  const tableData = snapshot.docs.map((d, index) => {
+    const c = d.data();
+    return [
+      index + 1,
+      c.nome,
+      c.setor,
+      c.status,
+      c.responsavel || "-",
+      c.dataAbertura || "-",
+      c.dataFechamento || "-",
+      c.email,
+      c.telefone
+    ];
+  });
+
+  doc.autoTable({
+    startY: y,
+    head: [["#", "Usuário", "Setor", "Status", "Responsável", "Abertura", "Encerramento", "Email", "Telefone"]],
+    body: tableData,
+    headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: "bold" },
+    alternateRowStyles: { fillColor: [245, 245, 245] },
+    margin: { left: 14, right: 14 },
+    styles: { fontSize: 10 },
+    theme: 'grid'
+  });
+
+  doc.save("relatorio_chamados.pdf");
 });
