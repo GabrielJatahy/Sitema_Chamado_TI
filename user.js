@@ -1,33 +1,30 @@
 import { collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
+// Inicializa EmailJS
+// Substitua pela sua Public Key do EmailJS
+emailjs.init("SUA_PUBLIC_KEY");
+
 const form = document.getElementById("formChamado");
 const listaChamados = document.getElementById("listaChamados");
 const auth = getAuth();
 
-// Se não estiver autenticado, loga anonimamente
+// Login anônimo
 signInAnonymously(auth).catch((err) => {
   console.error("Erro ao autenticar anonimamente:", err);
 });
 
-// Quando o estado de autenticação mudar
+// Escuta mudanças de autenticação
 onAuthStateChanged(auth, (user) => {
   if (!user) {
     console.log("Nenhum usuário autenticado (tente novamente).");
     return;
   }
 
-  onAuthStateChanged(auth, (user) => {
-  if (user) {
-    console.log("Usuário autenticado:", user.uid);
-  } else {
-    console.log("Nenhum usuário autenticado");
-  }
-});
-
-
   const uid = user.uid;
   const chamadosCollection = collection(window.db, "chamados");
+
+  console.log("Usuário autenticado:", uid);
 
   // Atualização em tempo real: mostra apenas chamados do usuário atual
   onSnapshot(chamadosCollection, (snapshot) => {
@@ -49,7 +46,7 @@ onAuthStateChanged(auth, (user) => {
     });
   });
 
-  // Enviar novo chamado (associando uid anônimo)
+  // Enviar novo chamado
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -66,8 +63,24 @@ onAuthStateChanged(auth, (user) => {
     };
 
     try {
+      // Salva no Firestore
       await addDoc(chamadosCollection, chamado);
       form.reset();
+
+      // 🔔 Envia notificação por e-mail via EmailJS
+      emailjs.send("service_7jso602", "template_79t3rx9", {
+        nome: chamado.nome,
+        email: chamado.email,
+        descricao: chamado.descricao,
+        setor: chamado.setor
+      })
+      .then(() => {
+        console.log("E-mail de notificação enviado com sucesso!");
+      })
+      .catch((err) => {
+        console.error("Erro ao enviar e-mail:", err);
+      });
+
     } catch (err) {
       console.error("Erro ao criar chamado:", err);
       alert("Não foi possível enviar o chamado. Verifique as permissões e tente novamente.");
