@@ -103,3 +103,31 @@ window.salvarAlteracoes = async function (id) {
 window.deletarChamado = async function (id) {
   await deleteDoc(doc(window.db, "chamados", id));
 };
+// Botão gerar relatório PDF
+document.getElementById("btnRelatorio").addEventListener("click", () => {
+  onSnapshot(collection(window.db, "chamados"), (snapshot) => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("Relatório de Chamados", 14, 20);
+    doc.setFontSize(12);
+
+    let y = 30;
+    snapshot.forEach((d, index) => {
+      const c = d.data();
+      doc.text(`${index+1}. ${c.nome} (${c.setor}) - ${c.status}`, 14, y);
+      doc.text(`Descrição: ${c.descricao}`, 14, y + 6);
+      doc.text(`E-mail: ${c.email} | Telefone: ${c.telefone}`, 14, y + 12);
+      doc.text(`Responsável: ${c.responsavel} | Abertura: ${c.dataAbertura || '-'} | Encerramento: ${c.dataFechamento || '-'}`, 14, y + 18);
+      y += 30;
+
+      if (y > 270) { // adiciona nova página se ultrapassar limite
+        doc.addPage();
+        y = 20;
+      }
+    });
+
+    doc.save("relatorio_chamados.pdf");
+  });
+});

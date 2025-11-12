@@ -7,6 +7,9 @@
 </head>
 <body>
   <h1>Painel de Administração</h1>
+<button id="btnRelatorio">Gerar relatório PDF</button>
+<div id="listaChamados"></div>
+
   <div id="listaChamados"></div>
 
   <!-- Firebase SDK -->
@@ -27,6 +30,8 @@
     const db = getFirestore(app);
     window.db = db;
   </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <script type="module" src="admin.js"></script>
 </body>
