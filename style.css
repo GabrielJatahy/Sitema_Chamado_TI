@@ -20,6 +20,58 @@ h1 {
   letter-spacing: 1px;
 }
 
+/* ======== FORMULÁRIO ======== */
+form {
+  background: #1f2937;
+  padding: 25px 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 40px; /* separação do primeiro chamado */
+}
+
+form input,
+form textarea,
+form select {
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+form button {
+  align-self: flex-end;
+}
+
+/* ======== INPUTS E SELECTS ======== */
+select,
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="datetime-local"],
+textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  margin-bottom: 10px;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  background-color: #111827;
+  color: #e5e7eb;
+  font-size: 15px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+select:focus,
+input:focus,
+textarea:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.3);
+  outline: none;
+}
+
 /* ======== BOTÕES ======== */
 button {
   background-color: #22c55e; /* verde suave */
@@ -29,7 +81,7 @@ button {
   border-radius: 8px;
   font-size: 15px;
   cursor: pointer;
-  margin: 8px 4px 8px 0;
+  margin-right: 8px;
   transition: background-color 0.2s, transform 0.1s;
   font-weight: 600;
 }
@@ -48,46 +100,6 @@ button:last-of-type:hover {
   background-color: #dc2626;
 }
 
-/* ======== FILTROS RÁPIDOS ======== */
-#filtrosRapidos {
-  display: flex;
-  gap: 10px;
-  margin: 20px 0;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-#filtrosRapidos button {
-  background-color: #374151; /* cinza escuro */
-  color: #e5e7eb;
-  padding: 8px 14px;
-  font-size: 14px;
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-#filtrosRapidos button:hover,
-#filtrosRapidos button.active {
-  background-color: #22c55e; /* verde destaque */
-  color: #111827;
-  transform: scale(1.05);
-}
-
-#filtrosRapidos button:focus {
-  outline: none;
-  box-shadow: 0 0 5px #22c55e;
-}
-
-/* ======== LISTA DE CHAMADOS ======== */
-#listaChamados {
-  width: 100%;
-  max-width: 800px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 20px;
-}
-
 /* ======== CARDS ======== */
 .card {
   background: #1f2937; /* cinza-escuro */
@@ -96,19 +108,21 @@ button:last-of-type:hover {
   margin-bottom: 20px;
   width: 100%;
   max-width: 700px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s, box-shadow 0.2s, border 0.2s;
   position: relative;
 }
 
+/* Hover efeito */
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 0 18px rgba(34,197,94,0.25);
+  box-shadow: 0 0 18px rgba(34, 197, 94, 0.25);
 }
 
+/* ======== TEXTOS ======== */
 .card strong {
   font-size: 1.3em;
-  color: #3b82f6;
+  color: #3b82f6; /* azul suave */
 }
 
 .card b {
@@ -122,11 +136,88 @@ button:last-of-type:hover {
 
 /* ======== CHAMADOS ABERTOS ======== */
 .card.aberto {
-  border: 2px solid #ef4444;
-  background-color: #4b1f1f;
+  border: 2px solid #ef4444; /* vermelho */
+  background-color: #4b1f1f; /* vermelho escuro suave */
 }
 
 /* ======== BADGES DE STATUS ======== */
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 4px;
+  color: white;
+  margin-bottom: 6px;
+}
+
+.status-aberto {
+  background-color: #ef4444; /* vermelho */
+}
+
+.status-em-andamento {
+  background-color: #f59e0b; /* laranja */
+}
+
+.status-em-espera {
+  background-color: #6366f1; /* azul escuro */
+}
+
+.status-concluido {
+  background-color: #22c55e; /* verde */
+}
+
+/* ======== LISTA DE CHAMADOS ======== */
+#listaChamados {
+  width: 100%;
+  max-width: 800px;
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ======== MENSAGENS ======== */
+p {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 16px;
+}
+
+/* ======== FILTROS RÁPIDOS (AJUSTADO) ======== */
+#filtrosContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0 30px 0; /* espaço inferior para separar do botão PDF */
+  justify-content: center;
+}
+
+#filtrosContainer button {
+  background-color: #374151; /* cinza escuro */
+  color: #e5e7eb;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+#filtrosContainer button:hover,
+#filtrosContainer button.active {
+  background-color: #22c55e; /* verde destaque */
+  color: #111827;
+  transform: scale(1.05);
+}
+
+#filtrosContainer button:focus {
+  outline: none;
+  box-shadow: 0 0 5px #22c55e;
+}
+
+/* Badge de status dentro dos cards */
 .status-badge {
   display: inline-block;
   padding: 4px 8px;
@@ -137,14 +228,7 @@ button:last-of-type:hover {
   color: #fff;
 }
 
-.status-aberto { background-color: #ef4444; }
-.status-em-andamento { background-color: #f59e0b; }
-.status-em-espera { background-color: #3b82f6; }
-.status-concluido { background-color: #10b981; }
-
-/* ======== MENSAGENS ======== */
-p {
-  text-align: center;
-  color: #9ca3af;
-  font-size: 16px;
-}
+.status-aberto { background-color: #ef4444; } /* vermelho */
+.status-em-andamento { background-color: #f59e0b; } /* laranja */
+.status-em-espera { background-color: #3b82f6; } /* azul */
+.status-concluido { background-color: #10b981; } /* verde */
