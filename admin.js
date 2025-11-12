@@ -103,11 +103,12 @@ window.salvarAlteracoes = async function (id) {
 window.deletarChamado = async function (id) {
   await deleteDoc(doc(window.db, "chamados", id));
 };
+
 // Botão gerar relatório PDF
 document.getElementById("btnRelatorio").addEventListener("click", () => {
   onSnapshot(collection(window.db, "chamados"), (snapshot) => {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    // ✅ Correção aqui
+    const doc = new window.jspdf.jsPDF();
 
     doc.setFontSize(18);
     doc.text("Relatório de Chamados", 14, 20);
@@ -122,7 +123,7 @@ document.getElementById("btnRelatorio").addEventListener("click", () => {
       doc.text(`Responsável: ${c.responsavel} | Abertura: ${c.dataAbertura || '-'} | Encerramento: ${c.dataFechamento || '-'}`, 14, y + 18);
       y += 30;
 
-      if (y > 270) { // adiciona nova página se ultrapassar limite
+      if (y > 270) {
         doc.addPage();
         y = 20;
       }
