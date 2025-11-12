@@ -27,10 +27,7 @@ signInAnonymously(auth).catch((err) => {
 
 // Escuta mudanças no estado de autenticação
 onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    console.log("Nenhum usuário autenticado. Tentando novamente...");
-    return;
-  }
+  if (!user) return console.log("Nenhum usuário autenticado.");
 
   console.log("Usuário autenticado:", user.uid);
 
@@ -40,7 +37,6 @@ onAuthStateChanged(auth, (user) => {
       renderizarChamados(snapshot);
     });
   } else {
-    console.log("⚠️ Usuário não é admin. Acesso negado ao painel.");
     listaChamados.innerHTML = "<p style='color:red;'>Acesso restrito ao administrador.</p>";
   }
 });
@@ -51,6 +47,20 @@ function renderizarChamados(snapshot) {
 
   snapshot.forEach((d) => {
     const chamado = d.data();
+
+    // Formata datas
+    const dataAbertura = chamado.dataAbertura?.toDate
+      ? chamado.dataAbertura.toDate().toLocaleString()
+      : chamado.dataAbertura
+      ? new Date(chamado.dataAbertura).toLocaleString()
+      : "-";
+
+    const dataFechamento = chamado.dataFechamento?.toDate
+      ? chamado.dataFechamento.toDate().toLocaleString()
+      : chamado.dataFechamento
+      ? new Date(chamado.dataFechamento).toLocaleString()
+      : "-";
+
     const div = document.createElement("div");
     div.classList.add("card");
 
@@ -61,8 +71,8 @@ function renderizarChamados(snapshot) {
       <b>Telefone:</b> ${chamado.telefone}<br>
       <b>Status atual:</b> ${chamado.status}<br>
       <b>Responsável:</b> ${chamado.responsavel}<br>
-      <b>Data abertura:</b> ${chamado.dataAbertura || "-"}<br>
-      <b>Data encerramento:</b> ${chamado.dataFechamento || "-"}<br><br>
+      <b>Data abertura:</b> ${dataAbertura}<br>
+      <b>Data encerramento:</b> ${dataFechamento}<br><br>
 
       <label>Alterar status:</label>
       <select id="status-${d.id}">
@@ -91,7 +101,7 @@ window.salvarAlteracoes = async function (id) {
 
   const updateData = { status, responsavel };
   if (status === "Concluído") {
-    updateData.dataFechamento = new Date().toLocaleString();
+    updateData.dataFechamento = new Date(); // salva como Timestamp
   }
 
   await updateDoc(chamadoRef, updateData);
@@ -101,9 +111,9 @@ window.deletarChamado = async function (id) {
   await deleteDoc(doc(window.db, "chamados", id));
 };
 
-// Botão gerar relatório PDF com estatísticas e tabela organizada
+// Gerar relatório PDF
 document.getElementById("btnRelatorio").addEventListener("click", async () => {
-  const snapshot = await getDocs(collection(window.db, "chamados")); // pega os dados uma vez
+  const snapshot = await getDocs(collection(window.db, "chamados"));
   const doc = new window.jspdf.jsPDF();
 
   const chamados = snapshot.docs.map(d => d.data());
@@ -112,43 +122,26 @@ document.getElementById("btnRelatorio").addEventListener("click", async () => {
   const mesAtual = agora.getMonth();
   const anoAtual = agora.getFullYear();
 
-  // Chamados do mês atual (corrigido para datas no formato Firestore ou string)
+  // Chamados do mês atual
   const chamadosMes = chamados.filter(c => {
     if (!c.dataAbertura) return false;
-
-    let data;
-    if (c.dataAbertura.toDate) {
-      data = c.dataAbertura.toDate();
-    } else if (typeof c.dataAbertura === "string") {
-      const partes = c.dataAbertura.split(/[/,: ]/);
-      data = new Date(
-        parseInt(partes[2]),      // ano
-        parseInt(partes[1]) - 1,  // mês
-        parseInt(partes[0]),      // dia
-        parseInt(partes[3]),      // hora
-        parseInt(partes[4]),      // minuto
-        parseInt(partes[5])       // segundo
-      );
-    } else {
-      data = new Date(c.dataAbertura);
-    }
-
+    const data = c.dataAbertura.toDate ? c.dataAbertura.toDate() : new Date(c.dataAbertura);
     return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
   }).length;
 
-  // Chamados abertos por usuário
   const abertosPorUsuario = {};
-  // Chamados atendidos por responsável
   const atendidosPorResponsavel = {};
+
   chamados.forEach(c => {
     if (!abertosPorUsuario[c.nome]) abertosPorUsuario[c.nome] = 0;
     abertosPorUsuario[c.nome]++;
+
     const resp = c.responsavel || "Não atribuído";
     if (!atendidosPorResponsavel[resp]) atendidosPorResponsavel[resp] = 0;
     atendidosPorResponsavel[resp]++;
   });
 
-  // Cabeçalho e estatísticas
+  // Cabeçalho
   doc.setFontSize(20);
   doc.setTextColor(41, 128, 185);
   doc.text("Relatório de Chamados", 14, 20);
@@ -176,16 +169,11 @@ document.getElementById("btnRelatorio").addEventListener("click", async () => {
 
   y += 10;
 
-  // Tabela detalhada com jsPDF-AutoTable
+  // Tabela detalhada
   const tableData = snapshot.docs.map((d, index) => {
     const c = d.data();
-
-    // Ajusta datas para exibição
-    let dataAbertura = c.dataAbertura;
-    if (c.dataAbertura?.toDate) dataAbertura = c.dataAbertura.toDate().toLocaleString();
-
-    let dataFechamento = c.dataFechamento;
-    if (c.dataFechamento?.toDate) dataFechamento = c.dataFechamento.toDate().toLocaleString();
+    const dataAbertura = c.dataAbertura?.toDate ? c.dataAbertura.toDate().toLocaleString() : new Date(c.dataAbertura).toLocaleString();
+    const dataFechamento = c.dataFechamento?.toDate ? c.dataFechamento.toDate().toLocaleString() : c.dataFechamento ? new Date(c.dataFechamento).toLocaleString() : "-";
 
     return [
       index + 1,
@@ -193,8 +181,8 @@ document.getElementById("btnRelatorio").addEventListener("click", async () => {
       c.setor,
       c.status,
       c.responsavel || "-",
-      dataAbertura || "-",
-      dataFechamento || "-",
+      dataAbertura,
+      dataFechamento,
       c.email,
       c.telefone
     ];
