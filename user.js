@@ -66,13 +66,15 @@ onAuthStateChanged(auth, (user) => {
 
       // Envia notificação por e-mail via EmailJS
       emailjs.send("service_7jso602", "template_79t3rx9", {
-        nome: chamado.nome,
-        email: chamado.email,
-        descricao: chamado.descricao,
-        setor: chamado.setor
-      })
-      .then(() => console.log("E-mail de notificação enviado com sucesso!"))
-      .catch(err => console.error("Erro ao enviar e-mail:", err));
+  nome: chamado.nome,
+  setor: chamado.setor,
+  descricao: chamado.descricao,
+  responsavel: chamado.responsavel || "Não atribuído",
+  dataAbertura: chamado.dataAbertura
+})
+.then(() => console.log("E-mail de notificação enviado com sucesso!"))
+.catch(err => console.error("Erro ao enviar e-mail:", err));
+
 
     } catch (err) {
       console.error("Erro ao criar chamado:", err);
