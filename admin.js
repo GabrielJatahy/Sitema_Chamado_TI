@@ -46,11 +46,12 @@ function renderizarChamados(snapshot) {
   });
 }
 
-// Atualização em tempo real
+// Atualização em tempo real para admin (todos os chamados)
 onSnapshot(collection(window.db, "chamados"), (snapshot) => {
   renderizarChamados(snapshot);
 });
 
+// Funções globais para salvar e deletar chamados
 window.salvarAlteracoes = async function (id) {
   const status = document.getElementById(`status-${id}`).value;
   const responsavel = document.getElementById(`resp-${id}`).value;
