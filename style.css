@@ -1,8 +1,8 @@
 /* ======== BASE GERAL ======== */
 body {
   font-family: "Segoe UI", Arial, sans-serif;
-  background: linear-gradient(to bottom, #2d3748, #111827); /* gradiente suave do claro para o escuro */
-  color: #e5e7eb; /* branco suave */
+  background: linear-gradient(to bottom, #d1d5db, #111827); /* gradiente suave claro → escuro */
+  color: #e5e7eb;
   margin: 0;
   padding: 40px;
   display: flex;
@@ -14,7 +14,7 @@ body {
 
 /* ======== TÍTULOS ======== */
 h1 {
-  color: #22c55e; /* verde suave fosco */
+  color: #22c55e;
   text-align: center;
   margin-bottom: 30px;
   letter-spacing: 1px;
@@ -23,7 +23,7 @@ h1 {
 
 /* ======== FORMULÁRIO ======== */
 form {
-  background: #1e293b; /* leve mudança para harmonizar com gradiente */
+  background: #1e293b;
   padding: 25px 30px;
   border-radius: 12px;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
@@ -75,7 +75,7 @@ textarea:focus {
 
 /* ======== BOTÕES ======== */
 button {
-  background-color: #22c55e; /* verde */
+  background-color: #22c55e; 
   color: #111827;
   border: none;
   padding: 10px 18px;
@@ -94,18 +94,18 @@ button:hover {
 }
 
 button:last-of-type {
-  background-color: #ef4444; /* vermelho mais suave */
-  color: #fff;
+  background-color: #f59e0b; /* laranja moderno */
+  color: #111827;
 }
 
 button:last-of-type:hover {
-  background-color: #dc2626;
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+  background-color: #d97706;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
 }
 
 /* ======== CARDS ======== */
 .card {
-  background: #1e293b; /* ajustado para combinar com gradiente */
+  background: #1e293b;
   border-radius: 12px;
   padding: 20px 25px;
   margin-bottom: 20px;
@@ -124,7 +124,7 @@ button:last-of-type:hover {
 /* ======== TEXTOS ======== */
 .card strong {
   font-size: 1.3em;
-  color: #3b82f6; /* azul suave */
+  color: #3b82f6;
 }
 
 .card b {
@@ -133,13 +133,13 @@ button:last-of-type:hover {
 
 .card label {
   font-weight: 600;
-  color: #cbd5e1; /* cor mais clara para labels */
+  color: #cbd5e1;
 }
 
 /* ======== CHAMADOS ABERTOS ======== */
 .card.aberto {
-  border: 2px solid #ef4444;
-  background-color: #581c1c; /* vermelho escuro mais harmonioso */
+  border: 2px solid #7c3aed; /* roxo */
+  background-color: #2c1a40; /* roxo escuro */
 }
 
 /* ======== BADGES DE STATUS ======== */
@@ -153,10 +153,10 @@ button:last-of-type:hover {
   color: #fff;
 }
 
-.status-aberto { background-color: #ef4444; }
-.status-em-andamento { background-color: #f59e0b; }
-.status-em-espera { background-color: #3b82f6; }
-.status-concluido { background-color: #22c55e; }
+.status-aberto { background-color: #7c3aed; }         /* roxo */
+.status-em-andamento { background-color: #f59e0b; }  /* laranja/dourado */
+.status-em-espera { background-color: #3b82f6; }     /* azul */
+.status-concluido { background-color: #22c55e; }     /* verde menta */
 
 /* ======== LISTA DE CHAMADOS ======== */
 #listaChamados {
@@ -180,12 +180,12 @@ p {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin: 50px 0 30px 0; /* espaçamento maior acima */
+  margin: 50px 0 30px 0;
   justify-content: center;
 }
 
 #filtrosContainer button {
-  background-color: #475569; /* cinza azulado mais leve */
+  background-color: #475569; 
   color: #e5e7eb;
   border: none;
   padding: 8px 14px;
