@@ -31,12 +31,17 @@ onAuthStateChanged(auth, (user) => {
       if (chamado.uid === uid) {
         const div = document.createElement("div");
         div.classList.add("card");
+        // Formata a data para exibição legível
+        const dataFormatada = chamado.dataAbertura.toDate 
+          ? chamado.dataAbertura.toDate().toLocaleString() 
+          : new Date(chamado.dataAbertura).toLocaleString();
+
         div.innerHTML = `
           <strong>${chamado.nome}</strong> (${chamado.setor})<br>
           <b>Descrição:</b> ${chamado.descricao}<br>
           <b>Status:</b> ${chamado.status}<br>
           <b>Responsável:</b> ${chamado.responsavel}<br>
-          <b>Data de abertura:</b> ${chamado.dataAbertura}
+          <b>Data de abertura:</b> ${dataFormatada}
         `;
         listaChamados.appendChild(div);
       }
@@ -56,7 +61,7 @@ onAuthStateChanged(auth, (user) => {
       telefone: document.getElementById("telefone").value,
       status: "Aberto",
       responsavel: "Não atribuído",
-      dataAbertura: new Date().toLocaleString()
+      dataAbertura: new Date() // salva como Timestamp/Date real
     };
 
     try {
@@ -64,17 +69,17 @@ onAuthStateChanged(auth, (user) => {
       await addDoc(chamadosCollection, chamado);
       form.reset();
 
-// Envia notificação por e-mail via EmailJS
-emailjs.send("service_7jso602", "template_79t3rx9", {
-  nome: chamado.nome,
-  setor: chamado.setor,
-  descricao: chamado.descricao,
-  responsavel: chamado.responsavel || "Não atribuído",
-  dataAbertura: chamado.dataAbertura
-})
-.then(() => console.log("E-mail de notificação enviado com sucesso!"))
-.catch(err => console.error("Erro ao enviar e-mail:", err));
-
+      // Envia notificação por e-mail via EmailJS
+      emailjs.send("service_7jso602", "template_79t3rx9", {
+        nome: chamado.nome,
+        setor: chamado.setor,
+        descricao: chamado.descricao,
+        responsavel: chamado.responsavel || "Não atribuído",
+        // Formata data para e-mail
+        dataAbertura: chamado.dataAbertura.toLocaleString()
+      })
+      .then(() => console.log("E-mail de notificação enviado com sucesso!"))
+      .catch(err => console.error("Erro ao enviar e-mail:", err));
 
     } catch (err) {
       console.error("Erro ao criar chamado:", err);
