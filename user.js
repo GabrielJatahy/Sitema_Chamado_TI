@@ -64,8 +64,8 @@ onAuthStateChanged(auth, (user) => {
       await addDoc(chamadosCollection, chamado);
       form.reset();
 
-      // Envia notificação por e-mail via EmailJS
-      emailjs.send("service_7jso602", "template_79t3rx9", {
+// Envia notificação por e-mail via EmailJS
+emailjs.send("service_7jso602", "template_79t3rx9", {
   nome: chamado.nome,
   setor: chamado.setor,
   descricao: chamado.descricao,
