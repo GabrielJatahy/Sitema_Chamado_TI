@@ -109,9 +109,11 @@ button:last-of-type:hover {
   width: 100%;
   max-width: 700px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, border 0.2s;
+  position: relative;
 }
 
+/* Hover efeito */
 .card:hover {
   transform: translateY(-4px);
   box-shadow: 0 0 18px rgba(34, 197, 94, 0.25);
@@ -132,11 +134,44 @@ button:last-of-type:hover {
   color: #9ca3af;
 }
 
+/* ======== CHAMADOS ABERTOS ======== */
+.card.aberto {
+  border: 2px solid #ef4444; /* vermelho */
+  background-color: #4b1f1f; /* vermelho escuro suave */
+}
+
+/* ======== BADGES DE STATUS ======== */
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 4px;
+  color: white;
+  margin-bottom: 6px;
+}
+
+.status-aberto {
+  background-color: #ef4444; /* vermelho */
+}
+
+.status-em-andamento {
+  background-color: #f59e0b; /* laranja */
+}
+
+.status-em-espera {
+  background-color: #6366f1; /* azul escuro */
+}
+
+.status-concluido {
+  background-color: #22c55e; /* verde */
+}
+
 /* ======== LISTA DE CHAMADOS ======== */
 #listaChamados {
   width: 100%;
   max-width: 800px;
-  margin-top: 40px; /* espaçamento extra */
+  margin-top: 40px;
   display: flex;
   flex-direction: column;
   align-items: center;
