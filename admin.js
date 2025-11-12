@@ -1,17 +1,5 @@
-import {
-  collection,
-  onSnapshot,
-  updateDoc,
-  deleteDoc,
-  doc,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-import {
-  getAuth,
-  signInAnonymously,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { collection, onSnapshot, updateDoc, deleteDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 const listaChamados = document.getElementById("listaChamados");
 const auth = getAuth();
@@ -20,20 +8,17 @@ const auth = getAuth();
 const isAdmin = true;
 const adminUID = "9PAzqlz8UacIi2Wsx7KZ1coV0An1";
 
-// Faz login anônimo
-signInAnonymously(auth).catch((err) => {
-  console.error("Erro ao autenticar anonimamente:", err);
-});
+// Login anônimo
+signInAnonymously(auth).catch(err => console.error("Erro ao autenticar anonimamente:", err));
 
-// Escuta mudanças no estado de autenticação
-onAuthStateChanged(auth, (user) => {
+// Observa autenticação
+onAuthStateChanged(auth, user => {
   if (!user) return console.log("Nenhum usuário autenticado.");
-
   console.log("Usuário autenticado:", user.uid);
 
   if (isAdmin || user.uid === adminUID) {
     console.log("✅ Acesso concedido ao painel admin. Carregando chamados...");
-    onSnapshot(collection(window.db, "chamados"), (snapshot) => {
+    onSnapshot(collection(window.db, "chamados"), snapshot => {
       renderizarChamados(snapshot);
     });
   } else {
@@ -41,14 +26,21 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-// Função para renderizar os chamados
+// Renderiza chamados
 function renderizarChamados(snapshot) {
   listaChamados.innerHTML = "";
 
-  snapshot.forEach((d) => {
-    const chamado = d.data();
+  // Cria array com docs + id
+  const chamadosArray = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    // Formata datas
+  // Ordena do mais recente para o mais antigo
+  chamadosArray.sort((a, b) => {
+    const dataA = a.dataAbertura?.toDate ? a.dataAbertura.toDate() : new Date(a.dataAbertura);
+    const dataB = b.dataAbertura?.toDate ? b.dataAbertura.toDate() : new Date(b.dataAbertura);
+    return dataB - dataA;
+  });
+
+  chamadosArray.forEach(chamado => {
     const dataAbertura = chamado.dataAbertura?.toDate
       ? chamado.dataAbertura.toDate().toLocaleString()
       : chamado.dataAbertura
@@ -64,18 +56,30 @@ function renderizarChamados(snapshot) {
     const div = document.createElement("div");
     div.classList.add("card");
 
-    div.innerHTML = `
+    // Destaque para chamados abertos
+    if (chamado.status === "Aberto") div.classList.add("aberto");
+
+    // Badge de status
+    const badge = document.createElement("span");
+    badge.classList.add("status-badge");
+    if (chamado.status === "Aberto") badge.classList.add("status-aberto");
+    else if (chamado.status === "Em andamento") badge.classList.add("status-em-andamento");
+    else if (chamado.status === "Em espera") badge.classList.add("status-em-espera");
+    else if (chamado.status === "Concluído") badge.classList.add("status-concluido");
+    badge.textContent = chamado.status;
+    div.appendChild(badge);
+
+    div.innerHTML += `
       <strong>${chamado.nome}</strong> (${chamado.setor})<br>
       <b>Descrição:</b> ${chamado.descricao}<br>
       <b>E-mail:</b> ${chamado.email}<br>
       <b>Telefone:</b> ${chamado.telefone}<br>
-      <b>Status atual:</b> ${chamado.status}<br>
       <b>Responsável:</b> ${chamado.responsavel}<br>
       <b>Data abertura:</b> ${dataAbertura}<br>
       <b>Data encerramento:</b> ${dataFechamento}<br><br>
 
       <label>Alterar status:</label>
-      <select id="status-${d.id}">
+      <select id="status-${chamado.id}">
         <option value="Aberto" ${chamado.status === "Aberto" ? "selected" : ""}>Aberto</option>
         <option value="Em andamento" ${chamado.status === "Em andamento" ? "selected" : ""}>Em andamento</option>
         <option value="Em espera" ${chamado.status === "Em espera" ? "selected" : ""}>Em espera</option>
@@ -83,10 +87,10 @@ function renderizarChamados(snapshot) {
       </select><br><br>
 
       <label>Responsável:</label>
-      <input type="text" id="resp-${d.id}" value="${chamado.responsavel}"><br><br>
+      <input type="text" id="resp-${chamado.id}" value="${chamado.responsavel}"><br><br>
 
-      <button onclick="salvarAlteracoes('${d.id}')">Salvar alterações</button>
-      <button onclick="deletarChamado('${d.id}')">Excluir</button>
+      <button onclick="salvarAlteracoes('${chamado.id}')">Salvar alterações</button>
+      <button onclick="deletarChamado('${chamado.id}')">Excluir</button>
     `;
 
     listaChamados.appendChild(div);
@@ -94,24 +98,22 @@ function renderizarChamados(snapshot) {
 }
 
 // Funções globais
-window.salvarAlteracoes = async function (id) {
+window.salvarAlteracoes = async function(id) {
   const status = document.getElementById(`status-${id}`).value;
   const responsavel = document.getElementById(`resp-${id}`).value;
   const chamadoRef = doc(window.db, "chamados", id);
 
   const updateData = { status, responsavel };
-  if (status === "Concluído") {
-    updateData.dataFechamento = new Date(); // salva como Timestamp
-  }
+  if (status === "Concluído") updateData.dataFechamento = new Date();
 
   await updateDoc(chamadoRef, updateData);
 };
 
-window.deletarChamado = async function (id) {
+window.deletarChamado = async function(id) {
   await deleteDoc(doc(window.db, "chamados", id));
 };
 
-// Gerar relatório PDF
+// Gerar PDF
 document.getElementById("btnRelatorio").addEventListener("click", async () => {
   const snapshot = await getDocs(collection(window.db, "chamados"));
   const doc = new window.jspdf.jsPDF();
@@ -122,7 +124,6 @@ document.getElementById("btnRelatorio").addEventListener("click", async () => {
   const mesAtual = agora.getMonth();
   const anoAtual = agora.getFullYear();
 
-  // Chamados do mês atual
   const chamadosMes = chamados.filter(c => {
     if (!c.dataAbertura) return false;
     const data = c.dataAbertura.toDate ? c.dataAbertura.toDate() : new Date(c.dataAbertura);
@@ -169,7 +170,6 @@ document.getElementById("btnRelatorio").addEventListener("click", async () => {
 
   y += 10;
 
-  // Tabela detalhada
   const tableData = snapshot.docs.map((d, index) => {
     const c = d.data();
     const dataAbertura = c.dataAbertura?.toDate ? c.dataAbertura.toDate().toLocaleString() : new Date(c.dataAbertura).toLocaleString();
