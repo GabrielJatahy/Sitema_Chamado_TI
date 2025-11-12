@@ -115,7 +115,24 @@ document.getElementById("btnRelatorio").addEventListener("click", async () => {
   // Chamados do mês atual (corrigido para datas no formato Firestore ou string)
   const chamadosMes = chamados.filter(c => {
     if (!c.dataAbertura) return false;
-    const data = new Date(c.dataAbertura);
+
+    let data;
+    if (c.dataAbertura.toDate) {
+      data = c.dataAbertura.toDate();
+    } else if (typeof c.dataAbertura === "string") {
+      const partes = c.dataAbertura.split(/[/,: ]/);
+      data = new Date(
+        parseInt(partes[2]),      // ano
+        parseInt(partes[1]) - 1,  // mês
+        parseInt(partes[0]),      // dia
+        parseInt(partes[3]),      // hora
+        parseInt(partes[4]),      // minuto
+        parseInt(partes[5])       // segundo
+      );
+    } else {
+      data = new Date(c.dataAbertura);
+    }
+
     return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
   }).length;
 
@@ -162,14 +179,22 @@ document.getElementById("btnRelatorio").addEventListener("click", async () => {
   // Tabela detalhada com jsPDF-AutoTable
   const tableData = snapshot.docs.map((d, index) => {
     const c = d.data();
+
+    // Ajusta datas para exibição
+    let dataAbertura = c.dataAbertura;
+    if (c.dataAbertura?.toDate) dataAbertura = c.dataAbertura.toDate().toLocaleString();
+
+    let dataFechamento = c.dataFechamento;
+    if (c.dataFechamento?.toDate) dataFechamento = c.dataFechamento.toDate().toLocaleString();
+
     return [
       index + 1,
       c.nome,
       c.setor,
       c.status,
       c.responsavel || "-",
-      c.dataAbertura || "-",
-      c.dataFechamento || "-",
+      dataAbertura || "-",
+      dataFechamento || "-",
       c.email,
       c.telefone
     ];
