@@ -14,12 +14,13 @@ body {
 
 /* ======== TÍTULOS ======== */
 h1 {
-  color: #22c55e;
+  color: #3b82f6; /* azul suave para combinar */
   text-align: center;
   margin-bottom: 30px;
   letter-spacing: 1px;
-  text-shadow: 0 0 5px rgba(34, 197, 94, 0.5);
+  text-shadow: 0 0 5px rgba(59, 130, 246, 0.5); /* sutil brilho */
 }
+
 
 /* ======== FORMULÁRIO ======== */
 form {
