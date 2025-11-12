@@ -183,3 +183,50 @@ p {
   color: #9ca3af;
   font-size: 16px;
 }
+/* ======== FILTROS RÁPIDOS ======== */
+#listaChamados + div {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+#listaChamados + div button {
+  background-color: #374151; /* cinza escuro */
+  color: #e5e7eb;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 600;
+}
+
+#listaChamados + div button:hover {
+  background-color: #22c55e; /* verde destaque */
+  color: #111827;
+  transform: scale(1.05);
+}
+
+#listaChamados + div button:focus {
+  outline: none;
+  box-shadow: 0 0 5px #22c55e;
+}
+
+/* Badge de status dentro dos cards */
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #fff;
+}
+
+.status-aberto { background-color: #ef4444; } /* vermelho */
+.status-em-andamento { background-color: #f59e0b; } /* laranja */
+.status-em-espera { background-color: #3b82f6; } /* azul */
+.status-concluido { background-color: #10b981; } /* verde */
