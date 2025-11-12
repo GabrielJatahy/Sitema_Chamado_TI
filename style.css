@@ -184,14 +184,15 @@ p {
   font-size: 16px;
 }
 
-/* ======== FILTROS RÁPIDOS (AJUSTADO) ======== */
+/* ======== FILTROS RÁPIDOS (MAIS ESPAÇO ACIMA) ======== */
 #filtrosContainer {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin: 20px 0 30px 0; /* espaço inferior para separar do botão PDF */
+  margin: 50px 0 30px 0; /* aumentei o margin-top para 50px */
   justify-content: center;
 }
+
 
 #filtrosContainer button {
   background-color: #374151; /* cinza escuro */
