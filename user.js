@@ -1,5 +1,9 @@
-import { collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { 
+  collection, addDoc, onSnapshot, getDocs 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
 import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // Inicializa EmailJS (substitua pela sua Public Key)
 emailjs.init("01yuXGwmVTOcPB5fb");
@@ -13,10 +17,7 @@ signInAnonymously(auth).catch(err => console.error("Erro ao autenticar anonimame
 
 // Escuta mudanças de autenticação
 onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    console.log("Nenhum usuário autenticado.");
-    return;
-  }
+  if (!user) return console.log("Nenhum usuário autenticado.");
 
   const uid = user.uid;
   const chamadosCollection = collection(window.db, "chamados");
@@ -28,22 +29,22 @@ onAuthStateChanged(auth, (user) => {
     listaChamados.innerHTML = "";
     snapshot.forEach((doc) => {
       const chamado = doc.data();
-      if (chamado.uid === uid) {
-        const dataFormatada = chamado.dataAbertura instanceof Object && chamado.dataAbertura.toDate
-          ? chamado.dataAbertura.toDate().toLocaleString() // Timestamp Firestore
-          : new Date(chamado.dataAbertura).toLocaleString(); // Date normal
+      if (chamado.uid !== uid) return;
 
-        const div = document.createElement("div");
-        div.classList.add("card");
-        div.innerHTML = `
-          <strong>${chamado.nome}</strong> (${chamado.setor})<br>
-          <b>Descrição:</b> ${chamado.descricao}<br>
-          <b>Status:</b> ${chamado.status}<br>
-          <b>Responsável:</b> ${chamado.responsavel}<br>
-          <b>Data de abertura:</b> ${dataFormatada}
-        `;
-        listaChamados.appendChild(div);
-      }
+      const dataFormatada = chamado.dataAbertura?.toDate 
+        ? chamado.dataAbertura.toDate().toLocaleString() 
+        : new Date(chamado.dataAbertura).toLocaleString();
+
+      const div = document.createElement("div");
+      div.classList.add("card");
+      div.innerHTML = `
+        <strong>${chamado.nome}</strong> (${chamado.setor})<br>
+        <b>Descrição:</b> ${chamado.descricao}<br>
+        <b>Status:</b> ${chamado.status}<br>
+        <b>Responsável:</b> ${chamado.responsavel}<br>
+        <b>Data de abertura:</b> ${dataFormatada}
+      `;
+      listaChamados.appendChild(div);
     });
   });
 
@@ -60,11 +61,10 @@ onAuthStateChanged(auth, (user) => {
       telefone: document.getElementById("telefone").value,
       status: "Aberto",
       responsavel: "Não atribuído",
-      dataAbertura: new Date() // salva como Date ou Timestamp
+      dataAbertura: serverTimestamp() // << Timestamp Firestore
     };
 
     try {
-      // Salva no Firestore
       await addDoc(chamadosCollection, chamado);
       form.reset();
 
@@ -73,20 +73,20 @@ onAuthStateChanged(auth, (user) => {
         nome: chamado.nome,
         setor: chamado.setor,
         descricao: chamado.descricao,
-        responsavel: chamado.responsavel || "Não atribuído",
-        dataAbertura: chamado.dataAbertura.toLocaleString()
+        responsavel: chamado.responsavel,
+        dataAbertura: new Date().toLocaleString() // exibição para o e-mail
       })
-      .then(() => console.log("E-mail de notificação enviado com sucesso!"))
+      .then(() => console.log("E-mail de notificação enviado!"))
       .catch(err => console.error("Erro ao enviar e-mail:", err));
 
     } catch (err) {
       console.error("Erro ao criar chamado:", err);
-      alert("Não foi possível enviar o chamado. Verifique as permissões e tente novamente.");
+      alert("Não foi possível enviar o chamado.");
     }
   });
 });
 
-// Função para gerar relatório PDF (ajustada para datas)
+// Função para gerar relatório PDF
 async function gerarRelatorio() {
   const snapshot = await getDocs(collection(window.db, "chamados"));
   const doc = new window.jspdf.jsPDF();
@@ -107,11 +107,9 @@ async function gerarRelatorio() {
   const abertosPorUsuario = {};
   const atendidosPorResponsavel = {};
   chamados.forEach(c => {
-    if (!abertosPorUsuario[c.nome]) abertosPorUsuario[c.nome] = 0;
-    abertosPorUsuario[c.nome]++;
+    abertosPorUsuario[c.nome] = (abertosPorUsuario[c.nome] || 0) + 1;
     const resp = c.responsavel || "Não atribuído";
-    if (!atendidosPorResponsavel[resp]) atendidosPorResponsavel[resp] = 0;
-    atendidosPorResponsavel[resp]++;
+    atendidosPorResponsavel[resp] = (atendidosPorResponsavel[resp] || 0) + 1;
   });
 
   // Cabeçalho e estatísticas
@@ -142,12 +140,11 @@ async function gerarRelatorio() {
 
   y += 10;
 
-  // Tabela detalhada com jsPDF-AutoTable
+  // Tabela detalhada
   const tableData = snapshot.docs.map((d, index) => {
     const c = d.data();
-    const dataAbertura = c.dataAbertura.toDate ? c.dataAbertura.toDate().toLocaleString() : new Date(c.dataAbertura).toLocaleString();
-    const dataFechamento = c.dataFechamento ? (c.dataFechamento.toDate ? c.dataFechamento.toDate().toLocaleString() : new Date(c.dataFechamento).toLocaleString()) : "-";
-
+    const dataAbertura = c.dataAbertura?.toDate ? c.dataAbertura.toDate().toLocaleString() : new Date(c.dataAbertura).toLocaleString();
+    const dataFechamento = c.dataFechamento?.toDate ? c.dataFechamento.toDate().toLocaleString() : (c.dataFechamento ? new Date(c.dataFechamento).toLocaleString() : "-");
     return [
       index + 1,
       c.nome,
@@ -175,5 +172,4 @@ async function gerarRelatorio() {
   doc.save("relatorio_chamados.pdf");
 }
 
-// Botão para gerar relatório
 document.getElementById("btnRelatorio").addEventListener("click", gerarRelatorio);
