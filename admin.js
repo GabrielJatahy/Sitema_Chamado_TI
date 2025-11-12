@@ -33,15 +33,11 @@ onAuthStateChanged(auth, (user) => {
 
   console.log("Usuário autenticado:", user.uid);
 
-  // Se for admin (modo forçado ou UID verdadeiro)
   if (isAdmin || user.uid === adminUID) {
     console.log("✅ Acesso concedido ao painel admin. Carregando chamados...");
-
-    // Atualização em tempo real
     onSnapshot(collection(window.db, "chamados"), (snapshot) => {
       renderizarChamados(snapshot);
     });
-
   } else {
     console.log("⚠️ Usuário não é admin. Acesso negado ao painel.");
     listaChamados.innerHTML = "<p style='color:red;'>Acesso restrito ao administrador.</p>";
@@ -104,20 +100,65 @@ window.deletarChamado = async function (id) {
   await deleteDoc(doc(window.db, "chamados", id));
 };
 
-// Botão gerar relatório PDF
+// Botão gerar relatório PDF com estatísticas
 document.getElementById("btnRelatorio").addEventListener("click", () => {
   onSnapshot(collection(window.db, "chamados"), (snapshot) => {
-    // ✅ Correção aqui
     const doc = new window.jspdf.jsPDF();
-
     doc.setFontSize(18);
     doc.text("Relatório de Chamados", 14, 20);
     doc.setFontSize(12);
 
+    const chamados = snapshot.docs.map(d => d.data());
+    const totalChamados = chamados.length;
+
+    const agora = new Date();
+    const mesAtual = agora.getMonth(); // 0 = Janeiro
+    const anoAtual = agora.getFullYear();
+
+    // Chamados do mês atual
+    const chamadosMes = chamados.filter(c => {
+      const data = new Date(c.dataAbertura);
+      return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
+    }).length;
+
+    // Chamados abertos por usuário
+    const abertosPorUsuario = {};
+    chamados.forEach(c => {
+      if (!abertosPorUsuario[c.nome]) abertosPorUsuario[c.nome] = 0;
+      abertosPorUsuario[c.nome]++;
+    });
+
+    // Chamados atendidos por responsável
+    const atendidosPorResponsavel = {};
+    chamados.forEach(c => {
+      const resp = c.responsavel || "Não atribuído";
+      if (!atendidosPorResponsavel[resp]) atendidosPorResponsavel[resp] = 0;
+      atendidosPorResponsavel[resp]++;
+    });
+
     let y = 30;
+    doc.text(`Total de chamados: ${totalChamados}`, 14, y); y += 8;
+    doc.text(`Chamados abertos neste mês: ${chamadosMes}`, 14, y); y += 8;
+
+    doc.text("Chamados abertos por usuário:", 14, y); y += 8;
+    for (const nome in abertosPorUsuario) {
+      doc.text(`- ${nome}: ${abertosPorUsuario[nome]}`, 16, y);
+      y += 6;
+    }
+
+    y += 4;
+    doc.text("Chamados atendidos por responsável:", 14, y); y += 8;
+    for (const resp in atendidosPorResponsavel) {
+      doc.text(`- ${resp}: ${atendidosPorResponsavel[resp]}`, 16, y);
+      y += 6;
+    }
+
+    y += 10; // espaço antes de listar detalhes
+
+    // Lista detalhada dos chamados
     snapshot.forEach((d, index) => {
       const c = d.data();
-      doc.text(`${index+1}. ${c.nome} (${c.setor}) - ${c.status}`, 14, y);
+      doc.text(`${index + 1}. ${c.nome} (${c.setor}) - ${c.status}`, 14, y);
       doc.text(`Descrição: ${c.descricao}`, 14, y + 6);
       doc.text(`E-mail: ${c.email} | Telefone: ${c.telefone}`, 14, y + 12);
       doc.text(`Responsável: ${c.responsavel} | Abertura: ${c.dataAbertura || '-'} | Encerramento: ${c.dataFechamento || '-'}`, 14, y + 18);
