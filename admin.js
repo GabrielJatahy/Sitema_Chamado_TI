@@ -112,8 +112,9 @@ document.getElementById("btnRelatorio").addEventListener("click", async () => {
   const mesAtual = agora.getMonth();
   const anoAtual = agora.getFullYear();
 
-  // Chamados do mês atual
+  // Chamados do mês atual (corrigido para datas no formato Firestore ou string)
   const chamadosMes = chamados.filter(c => {
+    if (!c.dataAbertura) return false;
     const data = new Date(c.dataAbertura);
     return data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
   }).length;
